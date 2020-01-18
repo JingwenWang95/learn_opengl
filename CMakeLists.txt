@@ -6,43 +6,44 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(glfw3)
 find_package(OpenGL 4.0)
 
+set(LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread ${ASSIMP_LIBRARY})
+
 include_directories(
     ${GLFW_INCLUDE_DIR}
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}
     )
 
-add_executable(single_triangle single_triangle.cpp src/glad.c)
-target_link_libraries(single_triangle
-    glfw
-    ${GLFW_LIBRARIES}
-    ${OPENGL_LIBRARIES}
+set(CHAPTERS
+    1.getting_started
     )
 
-add_executable(rectangle rectangle.cpp src/glad.c)
-target_link_libraries(rectangle
-    glfw
-    ${GLFW_LIBRARIES}
-    ${OPENGL_LIBRARIES}
+set(1.getting_started
+    1.1.single_triangle
+    1.2.triangle_exercise
+    1.3.rectangle
+    2.1.shader
+    3.1.texture
     )
 
-add_executable(triangle_exercise1 triangle_exercise1.cpp src/glad.c)
-target_link_libraries(triangle_exercise1
-    glfw
-    ${GLFW_LIBRARIES}
-    ${OPENGL_LIBRARIES}
-)
+add_library(STB_IMAGE "src/stb_image.cpp")
+set(LIBS ${LIBS} STB_IMAGE)
 
-add_executable(shader shader.cpp src/glad.c)
-target_link_libraries(shader
-    glfw
-    ${GLFW_LIBRARIES}
-    ${OPENGL_LIBRARIES}
-    )
+add_library(GLAD "src/glad.c")
+set(LIBS ${LIBS} GLAD)
 
-add_executable(texture texture.cpp stb_image.cpp src/glad.c)
-target_link_libraries(texture
-    glfw
-    ${GLFW_LIBRARIES}
-    ${OPENGL_LIBRARIES}
-    )
+foreach(CHAPTER ${CHAPTERS})
+    foreach(DEMO ${${CHAPTER}})
+        file(GLOB SOURCE
+            "src/${CHAPTER}/${DEMO}/*.h"
+            "src/${CHAPTER}/${DEMO}/*.cpp"
+            "src/${CHAPTER}/${DEMO}/*.vs"
+            "src/${CHAPTER}/${DEMO}/*.fs"
+            "src/${CHAPTER}/${DEMO}/*.gs"
+            )
+        set(NAME "${CHAPTER}__${DEMO}")
+        add_executable(${NAME} ${SOURCE})
+        target_link_libraries(${NAME} ${LIBS})
+        set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin/${CHAPTER}")
+    endforeach(DEMO)
+endforeach(CHAPTER)
